@@ -19,7 +19,7 @@ export class Population<T>{
         for (var i = 0; i < this.size; i++) {
             let parentA = this.getRandomParentFromBucket();
             let parentB = this.getRandomParentFromBucket();
-            let child = parentA.mergeWith(parentB);
+            let child = parentA.crossOver(parentB);
             child.mutated();
             this.population.push(child);
         }
@@ -32,14 +32,14 @@ export class Population<T>{
     }
 
     private fillBucket() {
-        let scoreArray = this.population.map(x => x.score);
+        let scoreArray = this.population.map(x => x.fitness);
         let total = scoreArray.reduce((prev, current) => current + prev);
         this.bucket = [];
         let normalizeScore = (score: number): number => Math.round(score / total * this.buketSize);
         let currentIndex = 0;
         this.population.forEach((dna: Dna<T>) => {
-            let currentScore = normalizeScore(dna.score);
-            for(let i =0; i< currentScore; i++){
+            let currentScore = normalizeScore(dna.fitness);
+            for (let i = 0; i < currentScore; i++) {
                 this.bucket.push(dna);
             }
         });

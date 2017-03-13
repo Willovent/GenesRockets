@@ -4,7 +4,7 @@
   "description": "coucou",
   "main": "dist/app.js",
   "scripts": {
-    "watch": "webpack -w | live-server dist",
+    "serve": "webpack -w | live-server dist",
     "build": "webpack",
     "test": "echo \"Error: no test specified\" && exit 1"
   },

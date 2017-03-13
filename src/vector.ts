@@ -2,10 +2,14 @@ export class Vector {
 
     constructor(public x: number, public y: number) { }
 
-    static random(maxX: number, maxY: number): Vector {
-        let x = Math.random() * maxX;
-        let y = Math.random() * maxY;
-        return new Vector(x, y);
+    static random(maxX?: number, maxY?: number, minX = 0, minY = 0): Vector {
+        if (!maxX && !maxY) {
+            var randAngle = Math.random() * 2 * Math.PI;
+            return Vector.fromAngle(randAngle);
+        }
+        let x = Math.random() * (maxX + minY);
+        let y = Math.random() * (maxY + minY);
+        return new Vector(x, y).add(new Vector(minX * -1, minY - 1));
     }
 
     add(vector: Vector | number): Vector {
@@ -34,6 +38,10 @@ export class Vector {
     limit(max: number) {
         this.x = (Math.abs(this.x) > max) ? (this.x * 0.9) : this.x;
         this.y = (Math.abs(this.y) > max) ? (this.y * 0.9) : this.y;
+    }
+
+    getAngle(){
+        return Math.atan2(this.y, this.x);
     }
 
     clone = (): Vector => new Vector(this.x, this.y);
