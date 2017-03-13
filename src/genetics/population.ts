@@ -1,16 +1,15 @@
 import { Dna } from './dna'
 
-export class Population<T>{
+export class Population<T, DnaGenes extends Dna<T> >{
 
-    private buketSize = 500;
     private bucket = [];
     private size: number;
 
-    constructor(private population: Dna<T>[]) {
+    constructor(private population: DnaGenes[]) {
         this.size = population.length;
     }
 
-    nextGeneration(): Dna<T>[] {
+    nextGeneration(): DnaGenes[] {
         for (var dna of this.population) {
             dna.evaluate();
         }
@@ -20,13 +19,13 @@ export class Population<T>{
             let parentA = this.getRandomParentFromBucket();
             let parentB = this.getRandomParentFromBucket();
             let child = parentA.crossOver(parentB);
-            child.mutated();
-            this.population.push(child);
+            child.mutate();
+            this.population.push(<DnaGenes>child);
         }
         return this.population;
     }
 
-    private getRandomParentFromBucket(): Dna<T> {
+    private getRandomParentFromBucket(): DnaGenes {
         let rand = Math.floor(Math.random() * this.bucket.length);
         return this.bucket[rand];
     }
@@ -35,9 +34,9 @@ export class Population<T>{
         let scoreArray = this.population.map(x => x.fitness);
         let total = scoreArray.reduce((prev, current) => current + prev);
         this.bucket = [];
-        let normalizeScore = (score: number): number => Math.round(score / total * this.buketSize);
+        let normalizeScore = (score: number): number => Math.round(score / total * this.size);
         let currentIndex = 0;
-        this.population.forEach((dna: Dna<T>) => {
+        this.population.forEach((dna: DnaGenes) => {
             let currentScore = normalizeScore(dna.fitness);
             for (let i = 0; i < currentScore; i++) {
                 this.bucket.push(dna);

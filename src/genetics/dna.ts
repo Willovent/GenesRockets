@@ -1,7 +1,7 @@
 export interface Dna<T> {
-    fitness: number
-    genes: T
+    fitness: number;
+    genes: T;
     crossOver(element: Dna<T>): Dna<T>;
-    mutated(): T
+    mutate(): T;
     evaluate(): number;
 }

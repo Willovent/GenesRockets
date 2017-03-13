@@ -1,10 +1,10 @@
-import { Dna } from './GeneticFramework/dna'
+import { Dna } from './genetics/dna'
 import { Vector } from './vector'
 
 export class VectorDna implements Dna<Vector[]>{
 
     fitness: number;
-
+    succeed = 1;
     constructor(public genes: Vector[], private target: Vector, public position?: Vector) { }
 
     crossOver(element: Dna<Vector[]>): Dna<Vector[]> {
@@ -12,9 +12,9 @@ export class VectorDna implements Dna<Vector[]>{
         return new VectorDna(this.genes.slice(0, mid).concat(element.genes.slice(mid)), this.target);
     }
 
-    mutated(): Vector[] {
+    mutate(): Vector[] {
         for (var i = 0; i < this.genes.length; i++) {
-            if (Math.random() < 0) {
+            if (Math.random() < 0.001) {
                 this.genes[i] = Vector.random().mult(.2);
             }
         }
@@ -22,7 +22,7 @@ export class VectorDna implements Dna<Vector[]>{
     }
 
     evaluate(): number {
-        return Math.pow(this.fitness = 1 / this.target.dist(this.position), 30);
+        return this.fitness = Math.pow(1 / (this.target.dist(this.position) + 1), 3) * Math.pow(this.succeed, 4);
     }
 
 }
