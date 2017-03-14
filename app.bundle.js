@@ -38927,8 +38927,11 @@
 	        this.succeed = 1;
 	    }
 	    VectorDna.prototype.crossOver = function (element) {
+	        var result = [];
 	        var mid = Math.floor(Math.random() * this.genes.length);
-	        return new VectorDna(this.genes.slice(0, mid).concat(element.genes.slice(mid)), this.target);
+	        result.push(new VectorDna(this.genes.slice(0, mid).concat(element.genes.slice(mid)), this.target));
+	        result.push(new VectorDna(element.genes.slice(0, mid).concat(this.genes.slice(mid)), this.target));
+	        return result;
 	    };
 	    VectorDna.prototype.mutate = function () {
 	        for (var i = 0; i < this.genes.length; i++) {
@@ -39016,18 +39019,21 @@
 	        this.size = population.length;
 	    }
 	    Population.prototype.nextGeneration = function () {
+	        var _this = this;
 	        for (var _i = 0, _a = this.population; _i < _a.length; _i++) {
 	            var dna = _a[_i];
 	            dna.evaluate();
 	        }
 	        this.fillBucket();
 	        this.population = [];
-	        for (var i = 0; i < this.size; i++) {
+	        for (var i = 0; i < this.size; i += 2) {
 	            var parentA = this.getRandomParentFromBucket();
 	            var parentB = this.getRandomParentFromBucket();
-	            var child = parentA.crossOver(parentB);
-	            child.mutate();
-	            this.population.push(child);
+	            var childs = parentA.crossOver(parentB);
+	            childs.forEach(function (child) {
+	                child.mutate();
+	                _this.population.push(child);
+	            });
 	        }
 	        return this.population;
 	    };
