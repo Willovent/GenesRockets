@@ -15,12 +15,12 @@ export class Population<T, DnaGenes extends Dna<T> >{
         }
         this.fillBucket();
         this.population = [];
-        for (var i = 0; i < this.size; i++) {
+        for (var i = 0; i < this.size/2; i++) {
             let parentA = this.getRandomParentFromBucket();
             let parentB = this.getRandomParentFromBucket();
-            let child = parentA.crossOver(parentB);
-            child.mutate();
-            this.population.push(<DnaGenes>child);
+            let childs = parentA.crossOver(parentB);
+            childs.forEach(x => x.mutate());
+            this.population = this.population.concat(<DnaGenes[]>childs);
         }
         return this.population;
     }
