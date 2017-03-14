@@ -1,6 +1,6 @@
-import { VectorDna } from './vectorDna'
-import { Vector } from './vector'
-import { Dna } from './genetics/dna'
+import { VectorDna } from '../genetics/vectorDna'
+import { Vector } from '../physics/vector'
+import { Dna } from '../genetics/dna'
 
 export class Rocket {
     position: Vector;
@@ -10,8 +10,8 @@ export class Rocket {
     private currentStep = 0;
     public isCrashed = false;
 
-    constructor(public stage: PIXI.Container, public dna: VectorDna) {
-        this.position = new Vector(400, 800);
+    constructor(public stage: PIXI.Container, public dna: VectorDna, public originalPosition: Vector) {
+        this.position = originalPosition.clone();
         this.graphics = PIXI.Sprite.fromImage('./rocket.png')
         this.graphics.anchor.set(0.5);
         stage.addChild(this.graphics);
@@ -23,7 +23,7 @@ export class Rocket {
     }
 
     resetRocket(dna: VectorDna) {
-        this.position.x = 400; this.position.y = 800;
+        this.position.x = this.originalPosition.x; this.position.y = this.originalPosition.y;
         this.velocity.mult(0);
         this.dna = dna;
         this.currentStep = 0;

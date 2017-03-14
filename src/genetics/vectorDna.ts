@@ -1,5 +1,5 @@
-import { Dna } from './genetics/dna'
-import { Vector } from './vector'
+import { Dna } from './dna'
+import { Vector } from '../physics/vector'
 
 export class VectorDna implements Dna<Vector[]>{
 
