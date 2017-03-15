@@ -10,8 +10,8 @@ export class VectorDna implements Dna<Vector[]>{
     crossOver(element: VectorDna):VectorDna[] {
         let result = [];
         var mid = Math.floor(Math.random() * this.genes.length);
-        result.push(new VectorDna(this.genes.slice(0, mid).concat(element.genes.slice(mid)), this.target));
-        result.push(new VectorDna(element.genes.slice(0, mid).concat(this.genes.slice(mid)), this.target));
+        result.push(new VectorDna([...this.genes.slice(0, mid),...element.genes.slice(mid)], this.target));
+        result.push(new VectorDna([...element.genes.slice(0, mid),...this.genes.slice(mid)], this.target));
         return result;
     }
 
