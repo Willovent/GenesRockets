@@ -20,7 +20,7 @@ export class Game {
         this.obstacles = this.generateObstacles(obstacleNumber);
         this.target = targetPositon;
         this.generateTargetSprite();
-        this.rockets = this.generateRockets(rocketNumber,rocketLifeSpan);
+        this.rockets = this.generateRockets(rocketNumber, rocketLifeSpan);
         this.population = new Population<Vector[], VectorDna>(this.rockets.map(x => x.dna));
         this.gameLoop();
     }
@@ -41,11 +41,11 @@ export class Game {
         return this.target;
     }
 
-    private generateRockets = (popSize: number,lifeSpan: number): Rocket[] => {
+    private generateRockets = (popSize: number, lifeSpan: number): Rocket[] => {
         let rockets: Rocket[] = []
         for (let i = 0; i < popSize; i++) {
             let dna = new VectorDna(this.generateDnaGenes(lifeSpan), this.target);
-            let rocket = new Rocket(this.stage, dna,new Vector(this.renderer.width/2, this.renderer.height));
+            let rocket = new Rocket(this.stage, dna, new Vector(this.renderer.width / 2, this.renderer.height));
             rockets.push(rocket);
         }
         return rockets
@@ -104,5 +104,4 @@ export class Game {
         this.renderer.render(this.stage);
         requestAnimationFrame(() => this.gameLoop());
     }
-
 }
