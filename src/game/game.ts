@@ -11,6 +11,7 @@ export class Game {
     obstacles: Obstacle[];
     target: Vector;
     rockets: Rocket[];
+    bestRocket: Rocket;
     population: Population<Vector[], VectorDna>;
 
     public init(obstacleNumber: number, rocketNumber: number, targetPositon: Vector, rendererSize: { height: number, width: number }, rocketLifeSpan: number) {
@@ -41,6 +42,13 @@ export class Game {
         return this.target;
     }
 
+    private getBestRocket() {
+        this.rockets.forEach(x => x.evaluate(this.target, this.obstacles, this.renderer.width, this.renderer.height));
+        this.bestRocket = this.rockets.sort((x, y) => y.dna.fitness - x.dna.fitness)[0];
+        this.bestRocket.resetPosition();
+        this.bestRocket.dna.succeed = 1;
+    }
+
     private generateRockets = (popSize: number, lifeSpan: number): Rocket[] => {
         let rockets: Rocket[] = []
         for (let i = 0; i < popSize; i++) {
@@ -48,6 +56,8 @@ export class Game {
             let rocket = new Rocket(this.stage, dna, new Vector(this.renderer.width / 2, this.renderer.height));
             rockets.push(rocket);
         }
+        this.rockets = rockets;
+        this.getBestRocket();
         return rockets
     }
 
@@ -84,22 +94,24 @@ export class Game {
 
     private gameLoop() {
         let needReset = false;
-        this.rockets.forEach(rocket => {
-            rocket.show();
-            if (this.obstacles.some(obs => obs.checkColision(rocket.position))) {
-                rocket.isCrashed = true;
-            }
 
-            if (rocket.position.x > this.renderer.width || rocket.position.x < 0 || rocket.position.y > this.renderer.height || rocket.position.y < 0) {
-                rocket.isCrashed = true;
-            }
+        this.bestRocket.show();
+        if (this.obstacles.some(obs => obs.checkColision(this.bestRocket.position))) {
+            this.bestRocket.isCrashed = true;
+            needReset = true;
+        }
 
-            if (rocket.update(this.target)) {
-                needReset = true;
-            }
-        });
+        if (this.bestRocket.position.x > this.renderer.width || this.bestRocket.position.x < 0 || this.bestRocket.position.y > this.renderer.height || this.bestRocket.position.y < 0) {
+            this.bestRocket.isCrashed = true;
+            needReset = true;
+        }
+
+        if (this.bestRocket.update(this.target)) {
+            needReset = true;
+        }
         if (needReset) {
             this.resetRocket();
+            this.getBestRocket();
         }
         this.renderer.render(this.stage);
         requestAnimationFrame(() => this.gameLoop());

@@ -25,7 +25,7 @@ export class VectorDna implements Dna<Vector[]>{
     }
 
     evaluate(): number {
-        return this.fitness = Math.pow(1 / (this.target.dist(this.position) + 1), 3) * Math.pow(this.succeed, 4);
+        return this.fitness = Math.pow(1 / (this.target.dist(this.position) + 1) * 1000, 3) * Math.pow(this.succeed, 7);
     }
 
 }
