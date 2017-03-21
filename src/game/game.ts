@@ -11,7 +11,7 @@ export class Game {
     obstacles: Obstacle[];
     target: Vector;
     rockets: Rocket[];
-    bestRocket: Rocket;
+    bestRocket: Rocket[];
     population: Population<Vector[], VectorDna>;
 
     public init(obstacleNumber: number, rocketNumber: number, targetPositon: Vector, rendererSize: { height: number, width: number }, rocketLifeSpan: number) {
@@ -42,11 +42,11 @@ export class Game {
         return this.target;
     }
 
-    private getBestRocket() {
+    private getBestRocket(size: number) {
         this.rockets.forEach(x => x.evaluate(this.target, this.obstacles, this.renderer.width, this.renderer.height));
-        this.bestRocket = this.rockets.sort((x, y) => y.dna.fitness - x.dna.fitness)[0];
-        this.bestRocket.resetPosition();
-        this.bestRocket.dna.succeed = 1;
+        this.bestRocket = this.rockets.sort((x, y) => y.dna.fitness - x.dna.fitness).slice(0, size);
+        this.bestRocket.forEach(x => x.resetPosition());
+        this.bestRocket.forEach(x => x.dna.succeed = 1);
     }
 
     private generateRockets = (popSize: number, lifeSpan: number): Rocket[] => {
@@ -57,7 +57,7 @@ export class Game {
             rockets.push(rocket);
         }
         this.rockets = rockets;
-        this.getBestRocket();
+        this.getBestRocket(3);
         return rockets
     }
 
@@ -78,6 +78,14 @@ export class Game {
         background.anchor.y = 0;
         background.position.x = 0;
         background.position.y = 0;
+        background.interactive = true;
+        background.buttonMode = true;
+        background.on('pointerdown', (coucou: PIXI.interaction.InteractionEvent) => {
+            var pos = coucou.data.getLocalPosition(this.stage);
+            var radius = Math.floor(Math.random() * 40) + 20;
+            this.obstacles.push(new Obstacle(this.stage, new Vector(pos.x, pos.y), radius));
+            console.log(pos);
+        });
         stage.addChild(background);
     }
 
@@ -94,25 +102,25 @@ export class Game {
 
     private gameLoop() {
         let needReset = false;
+        this.bestRocket.forEach(rocket => {
+            rocket.show();
+            if (this.obstacles.some(obs => obs.checkColision(rocket.position))) {
+                rocket.isCrashed = true;
+            }
 
-        this.bestRocket.show();
-        if (this.obstacles.some(obs => obs.checkColision(this.bestRocket.position))) {
-            this.bestRocket.isCrashed = true;
-            needReset = true;
-        }
+            if (rocket.position.x > this.renderer.width || rocket.position.x < 0 || rocket.position.y > this.renderer.height || rocket.position.y < 0) {
+                rocket.isCrashed = true;
+            }
 
-        if (this.bestRocket.position.x > this.renderer.width || this.bestRocket.position.x < 0 || this.bestRocket.position.y > this.renderer.height || this.bestRocket.position.y < 0) {
-            this.bestRocket.isCrashed = true;
-            needReset = true;
-        }
-
-        if (this.bestRocket.update(this.target)) {
-            needReset = true;
-        }
-        if (needReset) {
+            if (rocket.update(this.target)) {
+                needReset = true;
+            }
+        });
+        if (needReset || this.bestRocket.every(x => x.isCrashed || x.dna.succeed > 1)) {
             this.resetRocket();
-            this.getBestRocket();
+            this.getBestRocket(3);
         }
+
         this.renderer.render(this.stage);
         requestAnimationFrame(() => this.gameLoop());
     }

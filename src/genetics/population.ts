@@ -35,7 +35,6 @@ export class Population<T, DnaGenes extends Dna<T> >{
     private fillBucket() {
         let scoreArray = this.population.map(x => x.fitness);
         let total = scoreArray.reduce((prev, current) => current + prev);
-        console.log(total);
         this.bucket = [];
         let normalizeScore = (score: number): number => Math.round(score / total * this.size);
         let currentIndex = 0;
