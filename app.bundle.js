@@ -49,7 +49,7 @@
 	var game_1 = __webpack_require__(1);
 	var vector_1 = __webpack_require__(187);
 	var game = new game_1.Game();
-	game.init(6, 50, new vector_1.Vector(400, 70), { width: 800, height: 800 }, 300);
+	game.init(10, 1000, new vector_1.Vector(100, 70), { width: 200, height: 900 }, 900);
 
 
 /***/ },
@@ -83,6 +83,8 @@
 	                var rocket = new rocket_1.Rocket(_this.stage, dna, new vector_1.Vector(_this.renderer.width / 2, _this.renderer.height));
 	                rockets.push(rocket);
 	            }
+	            _this.rockets = rockets;
+	            _this.getBestRocket(3);
 	            return rockets;
 	        };
 	        this.generateDnaGenes = function (lifeSpan) {
@@ -100,6 +102,14 @@
 	            background.anchor.y = 0;
 	            background.position.x = 0;
 	            background.position.y = 0;
+	            background.interactive = true;
+	            background.buttonMode = true;
+	            background.on('pointerdown', function (coucou) {
+	                var pos = coucou.data.getLocalPosition(_this.stage);
+	                var radius = Math.floor(Math.random() * 40) + 20;
+	                _this.obstacles.push(new obstacle_1.Obstacle(_this.stage, new vector_1.Vector(pos.x, pos.y), radius));
+	                console.log(pos);
+	            });
 	            stage.addChild(background);
 	        };
 	        this.generateObstacles = function (size) {
@@ -131,10 +141,17 @@
 	            rocket.resetRocket(newDnas[i++]);
 	        });
 	    };
+	    Game.prototype.getBestRocket = function (size) {
+	        var _this = this;
+	        this.rockets.forEach(function (x) { return x.evaluate(_this.target, _this.obstacles, _this.renderer.width, _this.renderer.height); });
+	        this.bestRocket = this.rockets.sort(function (x, y) { return y.dna.fitness - x.dna.fitness; }).slice(0, size);
+	        this.bestRocket.forEach(function (x) { return x.resetPosition(); });
+	        this.bestRocket.forEach(function (x) { return x.dna.succeed = 1; });
+	    };
 	    Game.prototype.gameLoop = function () {
 	        var _this = this;
 	        var needReset = false;
-	        this.rockets.forEach(function (rocket) {
+	        this.bestRocket.forEach(function (rocket) {
 	            rocket.show();
 	            if (_this.obstacles.some(function (obs) { return obs.checkColision(rocket.position); })) {
 	                rocket.isCrashed = true;
@@ -146,8 +163,9 @@
 	                needReset = true;
 	            }
 	        });
-	        if (needReset) {
+	        if (needReset || this.bestRocket.every(function (x) { return x.isCrashed || x.dna.succeed > 1; })) {
 	            this.resetRocket();
+	            this.getBestRocket(3);
 	        }
 	        this.renderer.render(this.stage);
 	        requestAnimationFrame(function () { return _this.gameLoop(); });
@@ -1920,7 +1938,7 @@
 	 * @name VERSION
 	 * @type {string}
 	 */
-	var VERSION = exports.VERSION = '4.4.1';
+	var VERSION = exports.VERSION = '4.4.2';
 	
 	/**
 	 * Two Pi.
@@ -6267,6 +6285,15 @@
 	         * @private
 	         */
 	        _this._mask = null;
+	
+	        /**
+	         * If the object has been destroyed via destroy(). If true, it should not be used.
+	         *
+	         * @member {boolean}
+	         * @private
+	         * @readonly
+	         */
+	        _this._destroyed = false;
 	        return _this;
 	    }
 	
@@ -6550,6 +6577,8 @@
 	
 	        this.interactive = false;
 	        this.interactiveChildren = false;
+	
+	        this._destroyed = true;
 	    };
 	
 	    /**
@@ -7359,7 +7388,7 @@
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/**
-	 * isMobile.js v0.4.0
+	 * isMobile.js v0.4.1
 	 *
 	 * A simple library to detect Apple phones and tablets,
 	 * Android phones and tablets, other mobile devices (like blackberry, mini-opera and windows phone),
@@ -7378,7 +7407,7 @@
 	        android_tablet      = /Android/i,
 	        amazon_phone        = /(?=.*\bAndroid\b)(?=.*\bSD4930UR\b)/i,
 	        amazon_tablet       = /(?=.*\bAndroid\b)(?=.*\b(?:KFOT|KFTT|KFJWI|KFJWA|KFSOWI|KFTHWI|KFTHWA|KFAPWI|KFAPWA|KFARWI|KFASWI|KFSAWI|KFSAWA)\b)/i,
-	        windows_phone       = /IEMobile/i,
+	        windows_phone       = /Windows Phone/i,
 	        windows_tablet      = /(?=.*\bWindows\b)(?=.*\bARM\b)/i, // Match 'Windows' AND 'ARM'
 	        other_blackberry    = /BlackBerry/i,
 	        other_blackberry_10 = /BB10/i,
@@ -10631,6 +10660,15 @@
 	        }
 	
 	        /**
+	         * If the object has been destroyed via destroy(). If true, it should not be used.
+	         *
+	         * @member {boolean}
+	         * @private
+	         * @readonly
+	         */
+	        _this._destroyed = false;
+	
+	        /**
 	         * Fired when a not-immediately-available source finishes loading.
 	         *
 	         * @protected
@@ -11000,6 +11038,8 @@
 	        this.source = null;
 	
 	        this.dispose();
+	
+	        this._destroyed = true;
 	    };
 	
 	    /**
@@ -30560,10 +30600,13 @@
 	 * Destroys the cached object.
 	 *
 	 * @private
+	 * @param {object|boolean} [options] - Options parameter. A boolean will act as if all options
+	 *  have been set to that value.
+	 *  Used when destroying containers, see the Container.destroy method.
 	 */
-	DisplayObject.prototype._cacheAsBitmapDestroy = function _cacheAsBitmapDestroy() {
+	DisplayObject.prototype._cacheAsBitmapDestroy = function _cacheAsBitmapDestroy(options) {
 	    this.cacheAsBitmap = false;
-	    this.destroy();
+	    this.destroy(options);
 	};
 	//# sourceMappingURL=cacheAsBitmap.js.map
 
@@ -32582,11 +32625,13 @@
 	            var item = this.queue[0];
 	            var uploaded = false;
 	
-	            for (var i = 0, len = this.uploadHooks.length; i < len; i++) {
-	                if (this.uploadHooks[i](this.uploadHookHelper, item)) {
-	                    this.queue.shift();
-	                    uploaded = true;
-	                    break;
+	            if (item && !item._destroyed) {
+	                for (var i = 0, len = this.uploadHooks.length; i < len; i++) {
+	                    if (this.uploadHooks[i](this.uploadHookHelper, item)) {
+	                        this.queue.shift();
+	                        uploaded = true;
+	                        break;
+	                    }
 	                }
 	            }
 	
@@ -37070,9 +37115,9 @@
 	            // update the down state of the tracking data
 	            if (trackingData) {
 	                if (isRightButton) {
-	                    trackingData.rightDown = hit;
+	                    trackingData.rightDown = false;
 	                } else {
-	                    trackingData.leftDown = hit;
+	                    trackingData.leftDown = false;
 	                }
 	            }
 	        }
@@ -38961,7 +39006,7 @@
 	        return this.genes;
 	    };
 	    VectorDna.prototype.evaluate = function () {
-	        return this.fitness = Math.pow(1 / (this.target.dist(this.position) + 1), 3) * Math.pow(this.succeed, 4);
+	        return this.fitness = Math.pow(1 / (this.target.dist(this.position) + 1) * 1000, 3) * Math.pow(this.succeed, 7);
 	    };
 	    return VectorDna;
 	}());
@@ -38994,13 +39039,48 @@
 	        this.accleration.add(force);
 	    };
 	    Rocket.prototype.resetRocket = function (dna) {
-	        this.position.x = this.originalPosition.x;
-	        this.position.y = this.originalPosition.y;
-	        this.velocity.mult(0);
+	        this.resetPosition();
 	        this.dna = dna;
 	        this.currentStep = 0;
 	        this.dna.position = this.position;
 	        this.isCrashed = false;
+	    };
+	    Rocket.prototype.resetPosition = function () {
+	        this.position.x = this.originalPosition.x;
+	        this.position.y = this.originalPosition.y;
+	        this.velocity.mult(0);
+	        this.graphics.visible = true;
+	        this.isCrashed = false;
+	    };
+	    Rocket.prototype.evaluate = function (target, obstacles, width, height) {
+	        var _this = this;
+	        this.graphics.visible = false;
+	        var i = 0;
+	        for (var _i = 0, _a = this.dna.genes; _i < _a.length; _i++) {
+	            var gene = _a[_i];
+	            i++;
+	            if (this.isCrashed || this.dna.succeed > 1)
+	                break;
+	            this.applyForce(gene);
+	            this.velocity.add(this.accleration);
+	            this.position.add(this.velocity);
+	            this.accleration.mult(0);
+	            this.velocity.limit(4);
+	            if (this.position.dist(target) < 30) {
+	                this.dna.succeed = (1 / i) * this.dna.genes.length * 5;
+	                break;
+	            }
+	            if (obstacles.some(function (obs) { return obs.checkColision(_this.position); })) {
+	                this.isCrashed = true;
+	                break;
+	            }
+	            if (this.position.x > width || this.position.x < 0 || this.position.y > height || this.position.y < 0) {
+	                this.isCrashed = true;
+	                break;
+	            }
+	        }
+	        this.dna.position = this.position;
+	        this.dna.evaluate();
 	    };
 	    Rocket.prototype.update = function (target) {
 	        if (!(this.currentStep > this.dna.genes.length - 1 || this.isCrashed || this.dna.succeed > 1)) {
@@ -39009,7 +39089,6 @@
 	            this.position.add(this.velocity);
 	            this.accleration.mult(0);
 	            this.velocity.limit(4);
-	            this.currentStep;
 	            if (this.position.dist(target) < 30) {
 	                this.dna.succeed = (1 / this.currentStep) * this.dna.genes.length * 5;
 	            }
