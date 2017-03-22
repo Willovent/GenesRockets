@@ -33,6 +33,8 @@ export class Rocket {
 
     resetPosition() {
         this.position.x = this.originalPosition.x; this.position.y = this.originalPosition.y;
+        this.graphics.x = this.position.x;
+        this.graphics.y = this.position.y;
         this.velocity.mult(0);
         this.graphics.visible = true;
         this.isCrashed = false;
