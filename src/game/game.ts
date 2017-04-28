@@ -13,16 +13,33 @@ export class Game {
     rockets: Rocket[];
     bestRocket: Rocket[];
     population: Population<Vector[], VectorDna>;
+    rocketsToShow: number;
+    stopped: boolean = false;
+    inialized: boolean = false;
 
-    public init(obstacleNumber: number, rocketNumber: number, targetPositon: Vector, rendererSize: { height: number, width: number }, rocketLifeSpan: number) {
-        this.renderer = new PIXI.WebGLRenderer(rendererSize.width, rendererSize.height, { antialias: false, transparent: false });
-        document.body.appendChild(this.renderer.view);
-        this.generateBackground(this.stage);
-        this.obstacles = this.generateObstacles(obstacleNumber);
-        this.target = targetPositon;
-        this.generateTargetSprite();
-        this.rockets = this.generateRockets(rocketNumber, rocketLifeSpan);
-        this.population = new Population<Vector[], VectorDna>(this.rockets.map(x => x.dna));
+    public init(obstacleNumber: number, rocketNumber: number, targetPositon: Vector, rendererSize: { height: number, width: number }, rocketLifeSpan: number, rocketsToShow: number) {
+        this.stop();
+        setTimeout(() => {
+            this.renderer && this.renderer.destroy(true);
+            this.renderer = new PIXI.WebGLRenderer(rendererSize.width, rendererSize.height, { antialias: false, transparent: false });
+            document.body.appendChild(this.renderer.view);
+            this.generateBackground(this.stage);
+            this.obstacles = this.generateObstacles(obstacleNumber);
+            this.rocketsToShow = rocketsToShow;
+            this.target = targetPositon;
+            this.generateTargetSprite();
+            this.rockets = this.generateRockets(rocketNumber, rocketLifeSpan);
+            this.population = new Population<Vector[], VectorDna>(this.rockets.map(x => x.dna));
+            this.start();
+        },100);
+    }
+
+    public stop() {
+        this.stopped = true;
+    }
+
+    public start() {
+        this.stopped = false;
         this.gameLoop();
     }
 
@@ -57,7 +74,7 @@ export class Game {
             rockets.push(rocket);
         }
         this.rockets = rockets;
-        this.getBestRocket(3);
+        this.getBestRocket(this.rocketsToShow);
         return rockets
     }
 
@@ -84,7 +101,6 @@ export class Game {
             var pos = coucou.data.getLocalPosition(this.stage);
             var radius = Math.floor(Math.random() * 40) + 20;
             this.obstacles.push(new Obstacle(this.stage, new Vector(pos.x, pos.y), radius));
-            console.log(pos);
         });
         stage.addChild(background);
     }
@@ -118,10 +134,10 @@ export class Game {
         });
         if (needReset || this.bestRocket.every(x => x.isCrashed || x.dna.succeed > 1)) {
             this.resetRocket();
-            this.getBestRocket(3);
+            this.getBestRocket(this.rocketsToShow);
         }
 
         this.renderer.render(this.stage);
-        requestAnimationFrame(() => this.gameLoop());
+        requestAnimationFrame(() => !this.stopped && this.gameLoop());
     }
 }

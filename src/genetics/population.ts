@@ -13,36 +13,26 @@ export class Population<T, DnaGenes extends Dna<T> >{
         for (var dna of this.population) {
             dna.evaluate();
         }
-        this.fillBucket();
-        this.population = [];
+        let nextPop = [];
+        let totalFitness = this.population.reduce((prev, cur) => prev + cur.fitness, 0);
         for (var i = 0; i < this.size; i+=2) {
-            let parentA = this.getRandomParentFromBucket();
-            let parentB = this.getRandomParentFromBucket();
+            let parentA = this.getRandomParentFromBucket(totalFitness);
+            let parentB = this.getRandomParentFromBucket(totalFitness);
             let childs = parentA.crossOver(parentB);
             childs.forEach(child => {
                 child.mutate();
-                this.population.push(<DnaGenes>child);
+                nextPop.push(<DnaGenes>child);
             });
         }
-        return this.population;
+        return this.population = nextPop;
     }
 
-    private getRandomParentFromBucket(): DnaGenes {
-        let rand = Math.floor(Math.random() * this.bucket.length);
-        return this.bucket[rand];
-    }
-
-    private fillBucket() {
-        let scoreArray = this.population.map(x => x.fitness);
-        let total = scoreArray.reduce((prev, current) => current + prev);
-        this.bucket = [];
-        let normalizeScore = (score: number): number => Math.round(score / total * this.size);
-        let currentIndex = 0;
-        this.population.forEach((dna: DnaGenes) => {
-            let currentScore = normalizeScore(dna.fitness);
-            for (let i = 0; i < currentScore; i++) {
-                this.bucket.push(dna);
-            }
-        });
+    private getRandomParentFromBucket(totalFitness: number): DnaGenes {
+        let rand = Math.random() * totalFitness;
+        let index = -1;
+        while(rand > 0){
+            rand -= this.population[++index].fitness;
+        }
+        return this.population[index];
     }
 }
